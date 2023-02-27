@@ -38,7 +38,7 @@
 	<div class = "search-container__line"></div>
 	
 	
-<form id = "form-Search" action ="/CustomerSystem_Servlet_Jsp/T002" method = "POST" onsubmit="return validateForm()">
+<form id = "form-Search" action ="/CustomerSystem/T002" method = "POST" onsubmit="return validateForm()">
 	<div class = "search-container__handalSearch">
 		<div class = "search-container__handalSearch--margin handalSearch-customerName">
 			<div class = "handalSearch-customercommon handalSearch-customerName__text">Customer Name</div>
@@ -81,12 +81,12 @@
 			<%
 				if (request.getAttribute("listData") != null) {
 			%>
-				<button id = "btnFirst"><a href="/CustomerSystem_Servlet_Jsp/T002?index=<%=1 %>"><<</a></button>
+				<button id = "btnFirst"><a href="/CustomerSystem/T002?index=<%=1 %>"><<</a></button>
 				<c:if test="${tag < 1 }">				
-					<button id = "btnPrevious" disabled><a href="/CustomerSystem_Servlet_Jsp/T002?index=${tag-1}"><</a><</button>
+					<button id = "btnPrevious" disabled><a href="/CustomerSystem/T002?index=${tag-1}"><</a></button>
 				</c:if>
 				<c:if test="${tag > 1 }">				
-					<button id = "btnPrevious"><a href="/CustomerSystem_Servlet_Jsp/T002?index=${tag-1}"><</a><</button>
+					<button id = "btnPrevious"><a href="/CustomerSystem/T002?index=${tag-1}"><</a></button>
 				</c:if>
 			<%
 				}
@@ -110,20 +110,21 @@
 				if (request.getAttribute("listData") != null) {
 			%>
 			<c:if test="${tag > endP }">			
-				<button id = "btnNext" disabled ><a href="/CustomerSystem_Servlet_Jsp/T002?index=${tag+1}">></a></button>
+				<button id = "btnNext" disabled ><a href="/CustomerSystem/T002?index=${tag+1}">></a></button>
 			</c:if>
 			<c:if test="${tag < endP }">			
-				<button id = "btnNext" ><a href="/CustomerSystem_Servlet_Jsp/T002?index=${tag+1}">></a></button>
+				<button id = "btnNext" ><a href="/CustomerSystem/T002?index=${tag+1}">></a></button>
 			</c:if>
 				<%
 					int endP = (Integer) request.getAttribute("endP"); // lấy giá trị endP từ request
 				%>
-					<button id="btnPrevious"><a href="/CustomerSystem_Servlet_Jsp/T002?index=<%= endP %>">>></a></button>
+					<button id="btnPrevious"><a href="/CustomerSystem/T002?index=<%= endP %>">>></a></button>
 			<%
 				}
 			%>
 		</div>
 	</div>
+	<form action ="/CustomerSystem/T002" method = "POST">
 	<table class = "search-container__table">
         <tr class = "search-container__table--tieude">
         	<th><input type="checkbox" id = "checkAll" name="checkboxAll" value="" onclick = "checkBox(this)"></th>
@@ -133,7 +134,6 @@
             <th>Birthday</th>
             <th>Address</th>
         </tr>
-        
 	<c:choose>
     <c:when test="${not empty listDataSearch}">
         <c:forEach items="${listDataSearch}" var="dept">
@@ -147,10 +147,22 @@
             </tr>
         </c:forEach>
     </c:when>
-    <c:otherwise>
+    <c:when test="${not empty ListA}">
         <c:forEach items="${ListA}" var="dept">
             <tr>
-                <td><input type="checkbox" checked= "true" name="checkboxAll" value="${dept.CUSTOMER_ID}"></td>
+                <td><input type="checkbox" name="checkboxAll" value="${dept.CUSTOMER_ID}"></td>
+                <td><a href="/CustomerSystem/T003"> ${dept.CUSTOMER_ID} </a></td>
+                <td>${dept.CUSTOMER_NAME }</td>
+                <td>${dept.SEX}</td>
+                <td>${dept.BIRTHDAY}</td>
+                <td>${dept.ADDRESS}</td>
+            </tr>
+        </c:forEach>
+    </c:when>
+    <c:otherwise>
+        <c:forEach items="${listData}" var="dept">
+            <tr>
+                <td><input type="checkbox" name="checkboxAll" value="${dept.CUSTOMER_ID}"></td>
                 <td><a href="/CustomerSystem/T003"> ${dept.CUSTOMER_ID} </a></td>
                 <td>${dept.CUSTOMER_NAME }</td>
                 <td>${dept.SEX}</td>
@@ -159,48 +171,42 @@
             </tr>
         </c:forEach>
     </c:otherwise>
-</c:choose>
-
-
+	</c:choose>
     </table>
 		
 	<div class = "search-container__btnnav">
 		<button class = "search-container__nav-btnAdd">Add New</button>
-		<button class = "search-container__nav-btnAdd" onclick="deleteData()" >Delete</button>
+		<button type = "submit" onclick="deleteRows()"class = "search-container__nav-btnAdd" >Delete</button>
 			
 		</div>
 	</div>
+	</form>
 </div>
 <script>
-
-function deleteData() {
-	  var checkboxes = document.getElementsByName("checkboxAll");
-	  var selectedIds = [];
-	  for (var i = 0; i < checkboxes.length; i++) {
-	    if (checkboxes[i].checked) {
-	      selectedIds.push(checkboxes[i].value);
-	    }
-	  }
-	  if (selectedIds.length > 0) {
-	    var xhr = new XMLHttpRequest();
-	    xhr.open("POST", "/CustomerSystem_Servlet_Jsp/T002", true);
-	    xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-	    xhr.onreadystatechange = function() {
-	      if (xhr.readyState == 4 && xhr.status == 200) {
-	        // Xóa thành công, cập nhật lại dữ liệu trên trang hiện tại
-	        location.reload();
-	      }
-	    }
-	    xhr.send("ids=" + selectedIds.join(","));
-	  }
+function deleteRows() {
+	var checkboxes = document.querySelectorAll('input[type="checkbox"]:checked');
+	console.log(checkboxes);
+	var selectedValues = [];
+	for (var i = 0; i < checkboxes.length; i++) {
+	  selectedValues.push(checkboxes[i].value);
 	}
+	var xhttp = new XMLHttpRequest();
+	xhttp.onreadystatechange = function() {
+	  if (this.readyState == 4 && this.status == 200) {
+	    console.log(this.responseText);
+	  }
+	};
+	xhttp.open("POST", "/CustomerSystem/T002", true);
+	xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+	xhttp.send("selectedValues=" + JSON.stringify(selectedValues));
+} 
+
 	checkBox = (source) => {
 		var checkBoxAll = document.getElementsByName("checkboxAll");
 		for (var i = 0; i < checkBoxAll.length; i++) {
 			checkBoxAll[i].checked = source.checked;
 		}
 	}
-	
 	
 	isValidDate = (txtDate) => {
 		var currVal = txtDate;

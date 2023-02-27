@@ -6,8 +6,7 @@ import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
 
-import fjs.cs.common.DbConnection;
-import fjs.cs.common.DbDisconnection;
+import fjs.cs.common.DBConnection;
 import fjs.cs.dto.T002Dto;
 
 public class T002Dao {
@@ -17,7 +16,7 @@ public class T002Dao {
 			String query = "SELECT CUSTOMER_ID, CUSTOMER_NAME,\r\n" + 
 					"CASE WHEN SEX = 0 THEN 'Male' ELSE 'Female' END AS SEX,BIRTHDAY, ADDRESS\r\n" + 
 					"FROM MSTCUSTOMER WHERE DELETE_YMD IS NULL ORDER BY CUSTOMER_ID";
-			Connection conn = new DbConnection().getConnection();
+			Connection conn = new DBConnection().getConnection();
 			PreparedStatement ps = conn.prepareStatement(query);
 			ResultSet rs = ps.executeQuery();
 			while(rs.next()) {
@@ -46,7 +45,7 @@ public class T002Dao {
 	        		+ "    AND BIRTHDAY >= ?\r\n"
 	        		+ "    AND BIRTHDAY <= ?\r\n"
 	        		+ "ORDER BY CUSTOMER_ID;\r\n";
-	        conn = new DbConnection().getConnection();
+	        conn = new DBConnection().getConnection();
 	        PreparedStatement ps = conn.prepareStatement(query);
 	        ps.setString(1, "%" + name + "%");
 	        ps.setString(2, sex);
@@ -70,30 +69,58 @@ public class T002Dao {
 	}
 
 	
-	public List<T002Dto> deleteData(String id) {
-		List<T002Dto> listDelete = new ArrayList<T002Dto>();
+	public List<T002Dto> deleteData(String[] selecValue) {
+	    List<T002Dto> listDelete = new ArrayList<T002Dto>();
 	    Connection conn = null;
-		try {
-			String query = "UPDATE mstcustomer\r\n"
-					+ "SET Delete_YMD = CURRENT_TIMESTAMP\r\n"
-					+ "WHERE customer_Id IN (?)";
-			conn = DbConnection.getConnection();
-			PreparedStatement ps = conn.prepareStatement(query);
-			ps.setString(1, id);
-			ResultSet rs = ps.executeQuery();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return listDelete;
-		
+	    try {
+	        String query = "UPDATE MSTCUSTOMER "
+	                     + "SET Delete_YMD = CURRENT_TIMESTAMP "
+	                     + "WHERE customer_Id IN (";
+	        for (int i = 0; i < selecValue.length; i++) {
+	        	String[] ids = selecValue[0].split(",");
+	        	System.out.print(ids);
+	            for (int j = 0; j < ids.length; j++) {
+	                query += "?,";
+	            }
+	        }
+	        query = query.substring(0, query.length() - 1) + ")";
+	        conn = new DBConnection().getConnection();
+	        PreparedStatement ps = conn.prepareStatement(query);
+	        for (int i = 0; i < selecValue.length; i++) {
+	            ps.setLong(i + 1, Long.parseLong(selecValue[i]));
+	        }
+	        ps.executeUpdate();
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	    }
+	    return listDelete;
 	}
+	
+//	public List<T002Dto> deleteData(String selecValue) {
+//		List<T002Dto> listDelete = new ArrayList<T002Dto>();
+//	    Connection conn = null;
+//		try {
+//			String query = "UPDATE MSTCUSTOMER\r\n"
+//					+ "SET Delete_YMD = CURRENT_TIMESTAMP\r\n"
+//					+ "WHERE customer_Id IN (?)";
+//			conn = new DBConnection().getConnection();
+//			PreparedStatement ps = conn.prepareStatement(query);
+//			ps.setString(1, selecValue);
+//			
+//			ResultSet rs = ps.executeQuery();
+//		} catch (Exception e) {
+//			e.printStackTrace();
+//		}
+//		return listDelete;
+//		
+//	}
 	
 	
 	public int getDataPage() {
-		String query = "select count(*) from mstcustomer";
+		String query = "select count(*) from MSTCUSTOMER";
 		Connection conn = null;
 		try {
-			conn = DbConnection.getConnection();
+			conn = new DBConnection().getConnection();
 			PreparedStatement ps = conn.prepareStatement(query);
 			ResultSet rs = ps.executeQuery();
 			while(rs.next()) {
@@ -108,13 +135,13 @@ public class T002Dao {
 	public List<T002Dto> pagingData(int index) {
 		List<T002Dto> list = new ArrayList<>();
 		Connection conn = null;
-		//sql
+		//mysql : SELECT * FROM MSTCUSTOMER ORDER BY CUSTOMER_ID LIMIT ?, 3
 		//select * from mstcustomer order by CUSTOMER_ID OFFSET ? ROWS FETCH NEXT 3 ROWS ONLY
-		String query = "SELECT * FROM mstcustomer ORDER BY CUSTOMER_ID LIMIT ?, 3";
+		String query = "select CUSTOMER_ID, CUSTOMER_NAME, CASE WHEN SEX = 0 THEN 'Male' else 'Female' end as SEX, BIRTHDAY, ADDRESS from MSTCUSTOMER order by CUSTOMER_ID OFFSET ? ROWS FETCH NEXT 15 ROWS ONLY";
 		try {
-			conn = DbConnection.getConnection();
+			conn = new DBConnection().getConnection();
 			PreparedStatement ps = conn.prepareStatement(query);
-			ps.setInt(1, (index-1)*3);
+			ps.setInt(1, (index-1)*15);
 			ResultSet rs = ps.executeQuery();
 			while(rs.next()) {
 				T002Dto datapagin = new T002Dto();
@@ -130,6 +157,8 @@ public class T002Dao {
 		}
 		return list;
 	}
+
+	
 	
 	
 }
